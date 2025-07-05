@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-white text-black transition-colors duration-300">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hostel Expense Planner</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="p-4 max-w-xl mx-auto">
+
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">📊 Hostel Expense Planner</h1>
+    <button id="toggleTheme" class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded">🌙</button>
+  </div>
+
+  <form id="expense-form" class="bg-white dark:bg-gray-900 shadow-md rounded-lg p-5 space-y-4">
+    <div>
+      <label class="font-semibold">Month & Year:</label>
+      <input type="month" id="month" class="input" required />
+    </div>
+    <div>
+      <label class="font-semibold">Monthly Allowance (₹):</label>
+      <input type="number" id="allowance" class="input" required />
+    </div>
+
+    <div>
+      <h2 class="text-lg font-bold">Fixed Expenses</h2>
+      <label>Hostel Fee (₹):</label>
+      <input type="number" id="hostel" class="input" />
+      <label>Current Bill (₹):</label>
+      <input type="number" id="current" class="input" />
+      <label>Water Bill (₹):</label>
+      <input type="number" id="water" class="input" />
+    </div>
+
+    <div>
+      <h2 class="text-lg font-bold">Variable Expenses</h2>
+      <label>Daily Food Expense (₹):</label>
+      <input type="number" id="dailyFood" class="input" />
+      <label>Days in Month:</label>
+      <input type="number" id="daysInMonth" value="30" class="input" />
+      <label>Trip (₹):</label>
+      <input type="number" id="trip" class="input" />
+      <label>Recharge (₹):</label>
+      <input type="number" id="recharge" class="input" />
+    </div>
+
+    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Calculate & Save</button>
+  </form>
+
+  <div id="result" class="bg-white dark:bg-gray-900 mt-6 p-5 rounded-lg shadow hidden">
+    <div id="summary">
+      <h2 class="text-xl font-bold mb-2">💡 Summary</h2>
+      <p>Total Expenses: ₹<span id="total-expense"></span></p>
+      <p>Money Left: ₹<span id="left-amount" class=""></span></p>
+      <p>Food (₹<span id="daily-food-show"></span> × <span id="days-show"></span> days): ₹<span id="food-total"></span></p>
+      <div id="suggestions" class="mt-2 text-sm text-yellow-600 font-semibold"></div>
+    </div>
+    <canvas id="expenseChart" class="mt-4"></canvas>
+    <button onclick="downloadPDF()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Download Summary as PDF</button>
+  </div>
+
+  <div class="mt-6 bg-white dark:bg-gray-900 p-4 rounded shadow">
+    <h2 class="text-lg font-bold mb-2">📂 View Saved Monthly Reports</h2>
+    <ul id="history-list" class="text-sm space-y-2"></ul>
+  </div>
+
+  <script>
+    const form = document.getElementById("expense-form");
+    const resultDiv = document.getElementById("result");
+    const totalSpan = document.getElementById("total-expense");
+    const leftSpan = document.getElementById("left-amount");
+    const foodTotalSpan = document.getElementById("food-total");
+    const dailyFoodShow = document.getElementById("daily-food-show");
+    const daysShow = document.getElementById("days-show");
+    const suggestions = document.getElementById("suggestions");
+    const toggleBtn = document.getElementById("toggleTheme");
+    let chart;
+
+    // THEME
+    toggleBtn.onclick = () => {
+      document.documentElement.classList.toggle("dark");
+      document.documentElement.classList.toggle("bg-gray-900");
+      document.documentElement.classList.toggle("text-white");
+      localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+    };
+
+    window.onload = () => {
+      if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark", "bg-gray-900", "text-white");
+      }
+      loadHistory();
+    };
+
+    // MAIN FORM
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const monthKey = document.getElementById("month").value;
+      if (!monthKey) return alert("Please select a month!");
+
+      const data = {
+        allowance: +val("allowance"),
+        hostel: +val("hostel"),
+        current: +val("current"),
+        water: +val("water"),
+        dailyFood: +val("dailyFood"),
+        daysInMonth: +val("daysInMonth"),
+        trip: +val("trip"),
+        recharge: +val("recharge")
+      };
+
+      const foodTotal = data.dailyFood * data.daysInMonth;
+      const total = data.hostel + data.current + data.water + foodTotal + data.trip + data.recharge;
+      const left = data.allowance - total;
+
+      const savedData = {
+        ...data,
+        foodTotal, total, left
+      };
+
+      localStorage.setItem("report_" + monthKey, JSON.stringify(savedData));
+      loadHistory();
+      renderSummary(savedData);
+    };
+
+    function val(id) {
+      return document.getElementById(id).value || 0;
+    }
+
+    function renderSummary(data) {
+      totalSpan.textContent = data.total;
+      leftSpan.textContent = data.left;
+      leftSpan.className = data.left >= 0 ? "text-green-600 font-bold" : "text-red-600 font-bold";
+      foodTotalSpan.textContent = data.foodTotal;
+      dailyFoodShow.textContent = data.dailyFood;
+      daysShow.textContent = data.daysInMonth;
+
+      suggestions.innerHTML = "";
+      if (data.foodTotal > data.allowance * 0.4)
+        suggestions.innerHTML += "⚠️ High food cost! Try reducing it.<br>";
+      if (data.trip > data.allowance * 0.3)
+        suggestions.innerHTML += "⚠️ Trip cost is high! Limit long trips.<br>";
+      if (data.left < 0)
+        suggestions.innerHTML += "❗ You're overspending! Set a savings goal.";
+
+      const labels = ["Hostel", "Current", "Water", "Food", "Trip", "Recharge"];
+      const chartData = [data.hostel, data.current, data.water, data.foodTotal, data.trip, data.recharge];
+
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("expenseChart"), {
+        type: "pie",
+        data: {
+          labels,
+          datasets: [{ data: chartData, backgroundColor: ["#f87171", "#60a5fa", "#34d399", "#facc15", "#818cf8", "#fb923c"] }]
+        }
+      });
+
+      resultDiv.classList.remove("hidden");
+      window.scrollTo({ top: resultDiv.offsetTop, behavior: "smooth" });
+    }
+
+    function downloadPDF() {
+      html2pdf().from(document.getElementById("summary")).save("hostel_expense_summary.pdf");
+    }
+
+    // HISTORY VIEW
+    function loadHistory() {
+      const historyList = document.getElementById("history-list");
+      historyList.innerHTML = "";
+      for (let key in localStorage) {
+        if (key.startsWith("report_")) {
+          const month = key.replace("report_", "");
+          historyList.innerHTML += `
+            <li class="flex justify-between items-center">
+              <span>${month}</span>
+              <button onclick="viewReport('${month}')" class="text-blue-600 hover:underline">View</button>
+            </li>
+          `;
+        }
+      }
+    }
+
+    function viewReport(monthKey) {
+      const data = JSON.parse(localStorage.getItem("report_" + monthKey));
+      if (data) renderSummary(data);
+    }
+  </script>
+
+  <style>
+    .input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 2px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background-color: white;
+    }
+    .dark .input {
+      background-color: #1f2937;
+      color: white;
+      border-color: #4b5563;
+    }
+  </style>
+</body>
+</html>
