@@ -159,10 +159,23 @@
     }
 
     function downloadPDF() {
-      const summary = document.getElementById("summary").cloneNode(true);
-      const wrapper = document.createElement("div");
-      wrapper.appendChild(summary);
-      html2pdf().from(wrapper).save("hostel_expense_summary.pdf");
+      const chart = document.getElementById("expenseChart");
+      const originalDisplay = chart.style.display;
+      chart.style.display = "none";  // Temporarily hide chart
+
+      const summary = document.getElementById("summary");
+
+      const opt = {
+        margin: 0.5,
+        filename: "hostel_expense_summary.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
+      };
+
+      html2pdf().set(opt).from(summary).save().then(() => {
+        chart.style.display = originalDisplay; // Restore chart
+      });
     }
 
     function loadHistory() {
