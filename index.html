@@ -8,63 +8,65 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body class="p-4 max-w-xl mx-auto">
+<body class="p-4 sm:p-6 max-w-2xl mx-auto font-sans">
 
+  <!-- Header -->
   <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">📊 Hostel Expense Planner</h1>
-    <button id="toggleTheme" class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded">🌙</button>
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">💰 Hostel Expense Planner</h1>
+    <button id="toggleTheme" class="text-xl px-3 py-1 bg-gray-200 dark:bg-gray-800 rounded hover:scale-105 transition">🌙</button>
   </div>
 
-  <form id="expense-form" class="bg-white dark:bg-gray-900 shadow-md rounded-lg p-5 space-y-4">
-    <div>
-      <label class="font-semibold">Month & Year:</label>
-      <input type="month" id="month" class="input" required />
-    </div>
-    <div>
-      <label class="font-semibold">Monthly Allowance (₹):</label>
-      <input type="number" id="allowance" class="input" required />
-    </div>
-
-    <div>
-      <h2 class="text-lg font-bold">Fixed Expenses</h2>
-      <label>Hostel Fee (₹):</label>
-      <input type="number" id="hostel" class="input" />
-      <label>Current Bill (₹):</label>
-      <input type="number" id="current" class="input" />
-      <label>Water Bill (₹):</label>
-      <input type="number" id="water" class="input" />
+  <!-- Expense Form -->
+  <form id="expense-form" class="bg-white dark:bg-gray-900 shadow-xl rounded-2xl p-6 space-y-5 border dark:border-gray-700">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block font-medium">📅 Month & Year:</label>
+        <input type="month" id="month" class="input" required />
+      </div>
+      <div>
+        <label class="block font-medium">🎯 Allowance (₹):</label>
+        <input type="number" id="allowance" class="input" required />
+      </div>
     </div>
 
-    <div>
-      <h2 class="text-lg font-bold">Variable Expenses</h2>
-      <label>Daily Food Expense (₹):</label>
-      <input type="number" id="dailyFood" class="input" />
-      <label>Days in Month:</label>
-      <input type="number" id="daysInMonth" value="30" class="input" />
-      <label>Trip (₹):</label>
-      <input type="number" id="trip" class="input" />
-      <label>Recharge (₹):</label>
-      <input type="number" id="recharge" class="input" />
+    <h2 class="text-lg font-bold text-gray-700 dark:text-gray-200">📌 Fixed Expenses</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <input type="number" id="hostel" class="input" placeholder="Hostel Fee (₹)" />
+      <input type="number" id="current" class="input" placeholder="Current Bill (₹)" />
+      <input type="number" id="water" class="input" placeholder="Water Bill (₹)" />
     </div>
 
-    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Calculate & Save</button>
+    <h2 class="text-lg font-bold text-gray-700 dark:text-gray-200">🍽️ Daily Food</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <input type="number" id="dailyFood" class="input" placeholder="Daily Food (₹)" />
+      <input type="number" id="daysInMonth" class="input" value="30" placeholder="Days in Month" />
+    </div>
+
+    <h2 class="text-lg font-bold text-gray-700 dark:text-gray-200">📱 Others</h2>
+    <div class="grid grid-cols-1 gap-4">
+      <input type="number" id="recharge" class="input" placeholder="Recharge (₹)" />
+    </div>
+
+    <button type="submit" class="w-full mt-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 shadow-md">💾 Calculate & Save</button>
   </form>
 
-  <div id="result" class="bg-white dark:bg-gray-900 mt-6 p-5 rounded-lg shadow hidden">
+  <!-- Result -->
+  <div id="result" class="bg-white dark:bg-gray-900 mt-8 p-6 rounded-2xl shadow-xl border dark:border-gray-700 hidden">
     <div id="summary">
-      <h2 class="text-xl font-bold mb-2">💡 Summary</h2>
-      <p>Total Expenses: ₹<span id="total-expense"></span></p>
-      <p>Money Left: ₹<span id="left-amount" class=""></span></p>
-      <p>Food (₹<span id="daily-food-show"></span> × <span id="days-show"></span> days): ₹<span id="food-total"></span></p>
-      <div id="suggestions" class="mt-2 text-sm text-yellow-600 font-semibold"></div>
+      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">📊 Monthly Summary</h2>
+      <p class="mb-1">💸 <strong>Total Expenses:</strong> ₹<span id="total-expense"></span></p>
+      <p class="mb-1">💼 <strong>Money Left:</strong> ₹<span id="left-amount" class=""></span></p>
+      <p class="mb-2">🍱 Food (₹<span id="daily-food-show"></span> × <span id="days-show"></span> days): ₹<span id="food-total"></span></p>
+      <div id="suggestions" class="text-yellow-600 text-sm font-semibold mt-2"></div>
     </div>
     <canvas id="expenseChart" class="mt-4"></canvas>
-    <button onclick="downloadPDF()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Download Summary as PDF</button>
+    <button onclick="downloadPDF()" class="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">📥 Download Summary as PDF</button>
   </div>
 
-  <div class="mt-6 bg-white dark:bg-gray-900 p-4 rounded shadow">
-    <h2 class="text-lg font-bold mb-2">📂 View Saved Monthly Reports</h2>
-    <ul id="history-list" class="text-sm space-y-2"></ul>
+  <!-- Monthly History -->
+  <div class="mt-10 bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-md border dark:border-gray-700">
+    <h2 class="text-lg font-bold text-gray-800 dark:text-white mb-3">🗂️ View Previous Reports</h2>
+    <ul id="history-list" class="text-sm space-y-2 text-gray-700 dark:text-gray-200"></ul>
   </div>
 
   <script>
@@ -94,7 +96,6 @@
       loadHistory();
     };
 
-    // MAIN FORM
     form.onsubmit = (e) => {
       e.preventDefault();
       const monthKey = document.getElementById("month").value;
@@ -107,19 +108,14 @@
         water: +val("water"),
         dailyFood: +val("dailyFood"),
         daysInMonth: +val("daysInMonth"),
-        trip: +val("trip"),
         recharge: +val("recharge")
       };
 
       const foodTotal = data.dailyFood * data.daysInMonth;
-      const total = data.hostel + data.current + data.water + foodTotal + data.trip + data.recharge;
+      const total = data.hostel + data.current + data.water + foodTotal + data.recharge;
       const left = data.allowance - total;
 
-      const savedData = {
-        ...data,
-        foodTotal, total, left
-      };
-
+      const savedData = { ...data, foodTotal, total, left };
       localStorage.setItem("report_" + monthKey, JSON.stringify(savedData));
       loadHistory();
       renderSummary(savedData);
@@ -140,20 +136,21 @@
       suggestions.innerHTML = "";
       if (data.foodTotal > data.allowance * 0.4)
         suggestions.innerHTML += "⚠️ High food cost! Try reducing it.<br>";
-      if (data.trip > data.allowance * 0.3)
-        suggestions.innerHTML += "⚠️ Trip cost is high! Limit long trips.<br>";
       if (data.left < 0)
-        suggestions.innerHTML += "❗ You're overspending! Set a savings goal.";
+        suggestions.innerHTML += "❗ You're overspending! Create a saving plan.";
 
-      const labels = ["Hostel", "Current", "Water", "Food", "Trip", "Recharge"];
-      const chartData = [data.hostel, data.current, data.water, data.foodTotal, data.trip, data.recharge];
+      const labels = ["Hostel", "Current", "Water", "Food", "Recharge"];
+      const chartData = [data.hostel, data.current, data.water, data.foodTotal, data.recharge];
 
       if (chart) chart.destroy();
       chart = new Chart(document.getElementById("expenseChart"), {
         type: "pie",
         data: {
           labels,
-          datasets: [{ data: chartData, backgroundColor: ["#f87171", "#60a5fa", "#34d399", "#facc15", "#818cf8", "#fb923c"] }]
+          datasets: [{
+            data: chartData,
+            backgroundColor: ["#f87171", "#60a5fa", "#34d399", "#facc15", "#a78bfa"]
+          }]
         }
       });
 
@@ -162,10 +159,12 @@
     }
 
     function downloadPDF() {
-      html2pdf().from(document.getElementById("summary")).save("hostel_expense_summary.pdf");
+      const summary = document.getElementById("summary").cloneNode(true);
+      const wrapper = document.createElement("div");
+      wrapper.appendChild(summary);
+      html2pdf().from(wrapper).save("hostel_expense_summary.pdf");
     }
 
-    // HISTORY VIEW
     function loadHistory() {
       const historyList = document.getElementById("history-list");
       historyList.innerHTML = "";
@@ -191,12 +190,16 @@
   <style>
     .input {
       width: 100%;
-      padding: 8px;
-      margin-top: 2px;
-      margin-bottom: 10px;
-      border-radius: 8px;
+      padding: 10px;
+      border-radius: 10px;
       border: 1px solid #ccc;
       background-color: white;
+      transition: 0.2s ease;
+    }
+    .input:focus {
+      outline: none;
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3);
     }
     .dark .input {
       background-color: #1f2937;
