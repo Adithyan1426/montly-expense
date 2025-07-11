@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hostel Expense Manager</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .input-field {
+      @apply w-full px-4 py-2 mt-1 mb-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200;
+    }
+    .btn-primary {
+      @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    }
+    .btn-secondary {
+      @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    }
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+  <!-- Header -->
+  <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-wallet text-indigo-600 dark:text-indigo-400 text-2xl"></i>
+        <h1 class="text-xl font-bold">Hostel Expense Manager</h1>
+      </div>
+      <nav class="flex items-center space-x-4">
+        <button id="toggleTheme" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+          <i class="fas fa-moon dark:hidden"></i>
+          <i class="fas fa-sun hidden dark:block"></i>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="bg-white dark:bg-gray-800 shadow-md">
+    <div class="container mx-auto px-4">
+      <div class="flex overflow-x-auto">
+        <button data-page="index" class="nav-btn px-4 py-3 font-medium border-b-2 border-transparent hover:border-indigo-500 whitespace-nowrap">
+          <i class="fas fa-home mr-2"></i>Dashboard
+        </button>
+        <button data-page="monthly-planner" class="nav-btn px-4 py-3 font-medium border-b-2 border-transparent hover:border-indigo-500 whitespace-nowrap">
+          <i class="fas fa-calendar-alt mr-2"></i>Monthly Planner
+        </button>
+        <button data-page="daily-tracker" class="nav-btn px-4 py-3 font-medium border-b-2 border-transparent hover:border-indigo-500 whitespace-nowrap">
+          <i class="fas fa-coins mr-2"></i>Daily Tracker
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-6">
+    <!-- Index Page -->
+    <div id="index" class="page active">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
+          <div class="p-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+              <i class="fas fa-tachometer-alt mr-2 text-indigo-600 dark:text-indigo-400"></i>
+              Expense Dashboard
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="bg-indigo-50 dark:bg-gray-700 p-4 rounded-lg">
+                <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Monthly Budget</p>
+                <p class="text-2xl font-bold" id="total-budget">₹0</p>
+              </div>
+              <div class="bg-indigo-50 dark:bg-gray-700 p-4 rounded-lg">
+                <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Total Spent</p>
+                <p class="text-2xl font-bold" id="total-spent">₹0</p>
+              </div>
+              <div class="bg-indigo-50 dark:bg-gray-700 p-4 rounded-lg">
+                <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Remaining</p>
+                <p class="text-2xl font-bold" id="remaining-balance">₹0</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-lg font-semibold mb-3">Recent Monthly Plans</h3>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <ul id="recent-plans" class="space-y-2">
+                    <!-- Recent plans will be loaded here -->
+                  </ul>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold mb-3">Recent Daily Expenses</h3>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <ul id="recent-expenses" class="space-y-2">
+                    <!-- Recent expenses will be loaded here -->
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <div class="p-6">
+            <h2 class="text-xl font-bold mb-4">Quick Actions</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button data-page="monthly-planner" class="nav-btn bg-indigo-100 dark:bg-gray-700 p-4 rounded-lg text-left hover:bg-indigo-200 dark:hover:bg-gray-600 transition-colors">
+                <i class="fas fa-calendar-plus text-indigo-600 dark:text-indigo-400 text-2xl mb-2"></i>
+                <h3 class="font-semibold">Create Monthly Plan</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Plan your monthly hostel budget</p>
+              </button>
+              <button data-page="daily-tracker" class="nav-btn bg-indigo-100 dark:bg-gray-700 p-4 rounded-lg text-left hover:bg-indigo-200 dark:hover:bg-gray-600 transition-colors">
+                <i class="fas fa-plus-circle text-indigo-600 dark:text-indigo-400 text-2xl mb-2"></i>
+                <h3 class="font-semibold">Add Daily Expense</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Record your daily spending</p>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Planner Page -->
+    <div id="monthly-planner" class="page">
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold flex items-center">
+              <i class="fas fa-calendar-alt mr-2 text-indigo-600 dark:text-indigo-400"></i>
+              Monthly Expense Planner
+            </h2>
+          </div>
+          <form id="expense-form" class="p-6 space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium mb-1">Month & Year</label>
+                <input type="month" id="month" class="input-field" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Monthly Allowance (₹)</label>
+                <input type="number" id="allowance" class="input-field" required>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+              <h3 class="text-lg font-semibold mb-3 flex items-center">
+                <i class="fas fa-home mr-2 text-indigo-600 dark:text-indigo-400"></i>
+                Fixed Expenses
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Hostel Fee (₹)</label>
+                  <input type="number" id="hostel" class="input-field">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Current Bill (₹)</label>
+                  <input type="number" id="current" class="input-field">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Water Bill (₹)</label>
+                  <input type="number" id="water" class="input-field">
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+              <h3 class="text-lg font-semibold mb-3 flex items-center">
+                <i class="fas fa-utensils mr-2 text-indigo-600 dark:text-indigo-400"></i>
+                Variable Expenses
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Daily Food Expense (₹)</label>
+                  <input type="number" id="dailyFood" class="input-field">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Days in Month</label>
+                  <input type="number" id="daysInMonth" value="30" class="input-field">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Trip (₹)</label>
+                  <input type="number" id="trip" class="input-field">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Recharge (₹)</label>
+                  <input type="number" id="recharge" class="input-field">
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary w-full py-3">
+              <i class="fas fa-calculator mr-2"></i> Calculate & Save Plan
+            </button>
+          </form>
+        </div>
+
+        <div id="monthly-result" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold flex items-center">
+              <i class="fas fa-chart-pie mr-2 text-indigo-600 dark:text-indigo-400"></i>
+              Expense Summary
+            </h2>
+          </div>
+          <div class="p-6">
+            <div id="monthly-summary" class="mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-indigo-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Total Allowance</p>
+                  <p class="text-2xl font-bold">₹<span id="allowance-show"></span></p>
+                </div>
+                <div class="bg-indigo-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Total Expenses</p>
+                  <p class="text-2xl font-bold">₹<span id="total-expense"></span></p>
+                </div>
+                <div class="bg-indigo-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Money Left</p>
+                  <p class="text-2xl font-bold"><span id="left-amount"></span></p>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-2">Expense Breakdown</h3>
+                <ul class="space-y-2">
+                  <li class="flex justify-between">
+                    <span>Food (₹<span id="daily-food-show"></span> × <span id="days-show"></span> days)</span>
+                    <span>₹<span id="food-total"></span></span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span>Hostel Fee</span>
+                    <span>₹<span id="hostel-show"></span></span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span>Current Bill</span>
+                    <span>₹<span id="current-show"></span></span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span>Water Bill</span>
+                    <span>₹<span id="water-show"></span></span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span>Trip</span>
+                    <span>₹<span id="trip-show"></span></span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span>Recharge</span>
+                    <span>₹<span id="recharge-show"></span></span>
+                  </li>
+                </ul>
+              </div>
+
+              <div id="suggestions" class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center">
+                  <i class="fas fa-lightbulb mr-2"></i> Budgeting Tips
+                </h3>
+                <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1" id="suggestions-list"></ul>
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <canvas id="expenseChart" height="300"></canvas>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button onclick="downloadMonthlyPDF()" class="btn-primary flex-1">
+                <i class="fas fa-file-pdf mr-2"></i> Download PDF
+              </button>
+              <button onclick="resetMonthlyForm()" class="btn-secondary flex-1">
+                <i class="fas fa-redo mr-2"></i> Create New Plan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mt-6">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold flex items-center">
+              <i class="fas fa-history mr-2 text-indigo-600 dark:text-indigo-400"></i>
+              Saved Monthly Plans
+            </h2>
+          </div>
+          <div class="p-6">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Month</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Allowance</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Expenses</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Balance</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="monthly-history" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <!-- Monthly plans will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+            <p id="no-monthly-reports" class="text-center py-4 text-gray-500">No monthly plans yet. Create your first plan above.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Expense Tracker Page -->
+    <div id="daily-tracker" class="page">
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold flex items-center">
+              <i class="fas fa-coins mr-2 text-indigo-600 dark:text-indigo-400"></i>
+              Daily Expense Tracker
+            </h2>
+          </div>
+          <form id="daily-expense-form" class="p-6 space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium mb-1">Date</label>
+                <input type="date" id="expense-date" class="input-field" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Amount (₹)</label>
+                <input type="number" id="expense-amount" class="input-field" required>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Category</label>
+              <select id="expense-category" class="input-field" required>
+                <option value="">Select a category</option>
+                <option value="food">Food</option>
+                <option value="transport">Transport</option>
+                <option value="shopping">Shopping</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="bills">Bills</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Description (Optional)</label>
+              <input type="text" id="expense-description" class="input-field" placeholder="What was this expense for?">
+            </div>
+
+            <button type="submit" class="btn-primary w-full py-3">
+              <i class="fas fa-save mr-2"></i> Save Expense
+            </button>
+          </form>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold flex items-center">
+              <i class="fas fa-filter mr-2 text-indigo-600 dark:text-indigo-400"></i>
+              Filter Expenses
+            </h2>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Month</label>
+                <select id="filter-month" class="input-field">
+                  <option value="">All Months</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Category</label>
+                <select id="filter-category" class="input-field">
+                  <option value="">All Categories</option>
+                  <option value="food">Food</option>
+                  <option value="transport">Transport</option>
+                  <option value="shopping">Shopping</option>
+                  <option value="entertainment">Entertainment</option>
+                  <option value="bills">Bills</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="flex items-end">
+                <button id="apply-filter" class="btn-primary w-full py-2">
+                  <i class="fas fa-filter mr-2"></i> Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold flex items-center">
+              <i class="fas fa-chart-bar mr-2 text-indigo-600 dark:text-indigo-400"></i>
+              Monthly Summary
+            </h2>
+          </div>
+          <div class="p-6">
+            <div class="mb-6">
+              <canvas id="dailyExpenseChart" height="300"></canvas>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Count</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Amount</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody id="monthly-summary-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <!-- Monthly summary will be loaded here -->
+                </tbody>
+                <tfoot class="bg-gray-50 dark:bg-gray-700 font-semibold">
+                  <tr>
+                    <td class="px-4 py-3">Total</td>
+                    <td class="px-4 py-3" id="total-count">0</td>
+                    <td class="px-4 py-3" id="total-amount">₹0</td>
+                    <td class="px-4 py-3">100%</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold flex items-center">
+              <i class="fas fa-list mr-2 text-indigo-600 dark:text-indigo-400"></i>
+              Expense History
+            </h2>
+          </div>
+          <div class="p-6">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="expense-history" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <!-- Expense history will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+            <p id="no-expenses" class="text-center py-4 text-gray-500">No expenses recorded yet. Add your first expense above.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6 mt-8">
+    <div class="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
+      <p>© 2023 Hostel Expense Manager. Helping students manage their finances better.</p>
+    </div>
+  </footer>
+
+  <script>
+    // DOM Elements
+    const pages = document.querySelectorAll('.page');
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const toggleBtn = document.getElementById('toggleTheme');
+    let monthlyChart, dailyChart;
+
+    // Initialize theme
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    // Toggle theme
+    toggleBtn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    // Navigation
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pageId = btn.getAttribute('data-page');
+        showPage(pageId);
+        
+        // Update active nav button
+        navBtns.forEach(navBtn => {
+          if (navBtn === btn) {
+            navBtn.classList.add('border-indigo-500', 'text-indigo-600', 'dark:text-indigo-400');
+            navBtn.classList.remove('border-transparent');
+          } else {
+            navBtn.classList.remove('border-indigo-500', 'text-indigo-600', 'dark:text-indigo-400');
+            navBtn.classList.add('border-transparent');
+          }
+        });
+      });
+    });
+
+    function showPage(pageId) {
+      pages.forEach(page => {
+        if (page.id === pageId) {
+          page.classList.add('active');
+        } else {
+          page.classList.remove('active');
+        }
+      });
+      
+      // Load data for the page
+      if (pageId === 'index') {
+        loadDashboard();
+      } else if (pageId === 'monthly-planner') {
+        loadMonthlyPlans();
+      } else if (pageId === 'daily-tracker') {
+        loadExpenses();
+        loadMonthFilter();
+      }
+    }
+
+    // Show alert
+    function showAlert(message, type) {
+      const alert = document.createElement('div');
+      alert.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+      }`;
+      alert.innerHTML = `
+        <div class="flex items-center">
+          <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+          <span>${message}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(alert);
+      
+      setTimeout(() => {
+        alert.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+        setTimeout(() => alert.remove(), 300);
+      }, 3000);
+    }
+
+    // ======================
+    // MONTHLY PLANNER LOGIC
+    // ======================
+
+    // Monthly form submission
+    document.getElementById('expense-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const monthKey = document.getElementById('month').value;
+      if (!monthKey) {
+        showAlert('Please select a month!', 'error');
+        return;
+      }
+
+      const data = {
+        month: monthKey,
+        allowance: +getValue('allowance'),
+        hostel: +getValue('hostel'),
+        current: +getValue('current'),
+        water: +getValue('water'),
+        dailyFood: +getValue('dailyFood'),
+        daysInMonth: +getValue('daysInMonth'),
+        trip: +getValue('trip'),
+        recharge: +getValue('recharge')
+      };
+
+      // Calculate totals
+      data.foodTotal = data.dailyFood * data.daysInMonth;
+      data.totalExpense = data.hostel + data.current + data.water + data.foodTotal + data.trip + data.recharge;
+      data.balance = data.allowance - data.totalExpense;
+
+      // Save to localStorage
+      localStorage.setItem(`monthly_${monthKey}`, JSON.stringify(data));
+      showAlert('Monthly plan saved successfully!', 'success');
+      
+      // Load history and display results
+      loadMonthlyPlans();
+      displayMonthlyResults(data);
+    });
+
+    // Display monthly results
+    function displayMonthlyResults(data) {
+      // Update summary
+      document.getElementById('allowance-show').textContent = data.allowance.toLocaleString();
+      document.getElementById('total-expense').textContent = data.totalExpense.toLocaleString();
+      
+      const balanceElement = document.getElementById('left-amount');
+      balanceElement.textContent = `₹${Math.abs(data.balance).toLocaleString()}`;
+      balanceElement.className = data.balance >= 0 ? 'text-green-600' : 'text-red-600';
+      
+      // Update expense breakdown
+      document.getElementById('food-total').textContent = data.foodTotal.toLocaleString();
+      document.getElementById('daily-food-show').textContent = data.dailyFood.toLocaleString();
+      document.getElementById('days-show').textContent = data.daysInMonth;
+      document.getElementById('hostel-show').textContent = data.hostel.toLocaleString();
+      document.getElementById('current-show').textContent = data.current.toLocaleString();
+      document.getElementById('water-show').textContent = data.water.toLocaleString();
+      document.getElementById('trip-show').textContent = data.trip.toLocaleString();
+      document.getElementById('recharge-show').textContent = data.recharge.toLocaleString();
+
+      // Generate suggestions
+      const suggestionsList = document.getElementById('suggestions-list');
+      suggestionsList.innerHTML = '';
+      
+      if (data.foodTotal > data.allowance * 0.4) {
+        suggestionsList.innerHTML += `<li><i class="fas fa-utensils mr-2"></i> Food costs are high (${(data.foodTotal/data.allowance*100).toFixed(0)}% of allowance). Consider eating out less.</li>`;
+      }
+      
+      if (data.trip > data.allowance * 0.2) {
+        suggestionsList.innerHTML += `<li><i class="fas fa-bus mr-2"></i> Trip expenses are significant (${(data.trip/data.allowance*100).toFixed(0)}% of allowance). Plan trips wisely.</li>`;
+      }
+      
+      if (data.balance < 0) {
+        suggestionsList.innerHTML += `<li><i class="fas fa-exclamation-triangle mr-2"></i> You're overspending! Try to reduce expenses by ₹${Math.abs(data.balance).toLocaleString()} to balance your budget.</li>`;
+      } else if (data.balance > data.allowance * 0.1) {
+        suggestionsList.innerHTML += `<li><i class="fas fa-piggy-bank mr-2"></i> Great! You can save ₹${data.balance.toLocaleString()} this month.</li>`;
+      }
+      
+      if (suggestionsList.innerHTML === '') {
+        suggestionsList.innerHTML = `<li><i class="fas fa-check-circle mr-2"></i> Your budget looks well balanced!</li>`;
+      }
+
+      // Create chart
+      if (monthlyChart) monthlyChart.destroy();
+      
+      const ctx = document.getElementById('expenseChart').getContext('2d');
+      monthlyChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Hostel', 'Current', 'Water', 'Food', 'Trip', 'Recharge'],
+          datasets: [{
+            data: [data.hostel, data.current, data.water, data.foodTotal, data.trip, data.recharge],
+            backgroundColor: [
+              '#6366f1', '#4f46e5', '#4338ca', 
+              '#10b981', '#f59e0b', '#ef4444'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const percentage = Math.round((value / data.totalExpense) * 100);
+                  return `${label}: ₹${value.toLocaleString()} (${percentage}%)`;
+                }
+              }
+            }
+          },
+          cutout: '65%'
+        }
+      });
+
+      // Show results section
+      document.getElementById('monthly-result').classList.remove('hidden');
+      document.getElementById('monthly-result').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Load monthly plans
+    function loadMonthlyPlans() {
+      const historyList = document.getElementById('monthly-history');
+      historyList.innerHTML = '';
+      let hasReports = false;
+      
+      // Get all reports from localStorage
+      const reports = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('monthly_')) {
+          reports.push({
+            key,
+            ...JSON.parse(localStorage.getItem(key))
+          });
+        }
+      }
+      
+      // Sort by date (newest first)
+      reports.sort((a, b) => new Date(b.month) - new Date(a.month));
+      
+      // Display reports
+      reports.forEach(report => {
+        hasReports = true;
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+        
+        const month = new Date(report.month + '-01').toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long' 
+        });
+        
+        const balanceClass = report.balance >= 0 ? 'text-green-600' : 'text-red-600';
+        
+        row.innerHTML = `
+          <td class="px-4 py-3 whitespace-nowrap font-medium">${month}</td>
+          <td class="px-4 py-3 whitespace-nowrap">₹${report.allowance.toLocaleString()}</td>
+          <td class="px-4 py-3 whitespace-nowrap">₹${report.totalExpense.toLocaleString()}</td>
+          <td class="px-4 py-3 whitespace-nowrap ${balanceClass}">₹${Math.abs(report.balance).toLocaleString()}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-right">
+            <button onclick="viewMonthlyReport('${report.key}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button onclick="deleteMonthlyReport('${report.key}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        
+        historyList.appendChild(row);
+      });
+      
+      document.getElementById('no-monthly-reports').style.display = hasReports ? 'none' : 'block';
+    }
+
+    // View monthly report
+    function viewMonthlyReport(key) {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (data) {
+        // Fill the form
+        document.getElementById('month').value = data.month;
+        document.getElementById('allowance').value = data.allowance;
+        document.getElementById('hostel').value = data.hostel;
+        document.getElementById('current').value = data.current;
+        document.getElementById('water').value = data.water;
+        document.getElementById('dailyFood').value = data.dailyFood;
+        document.getElementById('daysInMonth').value = data.daysInMonth;
+        document.getElementById('trip').value = data.trip;
+        document.getElementById('recharge').value = data.recharge;
+        
+        // Display results
+        displayMonthlyResults(data);
+      }
+    }
+
+    // Delete monthly report
+    function deleteMonthlyReport(key) {
+      if (confirm('Are you sure you want to delete this monthly plan?')) {
+        localStorage.removeItem(key);
+        loadMonthlyPlans();
+        showAlert('Monthly plan deleted successfully!', 'success');
+      }
+    }
+
+    // Download monthly PDF
+    function downloadMonthlyPDF() {
+      const element = document.getElementById('monthly-summary');
+      const month = document.getElementById('month').value;
+      const opt = {
+        margin: 10,
+        filename: `hostel_expense_plan_${month}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      html2pdf().set(opt).from(element).save();
+    }
+
+    // Reset monthly form
+    function resetMonthlyForm() {
+      document.getElementById('expense-form').reset();
+      document.getElementById('monthly-result').classList.add('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ======================
+    // DAILY TRACKER LOGIC
+    // ======================
+
+    // Daily expense form submission
+    document.getElementById('daily-expense-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const date = document.getElementById('expense-date').value;
+      if (!date) {
+        showAlert('Please select a date!', 'error');
+        return;
+      }
+
+      const expense = {
+        id: Date.now().toString(),
+        date,
+        amount: +getValue('expense-amount'),
+        category: getValue('expense-category'),
+        description: getValue('expense-description') || 'No description'
+      };
+
+      // Save to localStorage
+      saveExpense(expense);
+      showAlert('Expense saved successfully!', 'success');
+      
+      // Reset form and reload data
+      document.getElementById('daily-expense-form').reset();
+      document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+      loadExpenses();
+    });
+
+    // Save expense
+    function saveExpense(expense) {
+      let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+      expenses.push(expense);
+      localStorage.setItem('expenses', JSON.stringify(expenses));
+    }
+
+    // Load expenses
+    function loadExpenses(filterMonth = '', filterCategory = '') {
+      let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+      
+      // Apply filters
+      if (filterMonth) {
+        expenses = expenses.filter(exp => exp.date.startsWith(filterMonth));
+      }
+      if (filterCategory) {
+        expenses = expenses.filter(exp => exp.category === filterCategory);
+      }
+      
+      // Sort by date (newest first)
+      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      // Display expenses
+      const historyList = document.getElementById('expense-history');
+      historyList.innerHTML = '';
+      
+      expenses.forEach(expense => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+        
+        const date = new Date(expense.date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        row.innerHTML = `
+          <td class="px-4 py-3 whitespace-nowrap">${date}</td>
+          <td class="px-4 py-3 whitespace-nowrap">₹${expense.amount.toLocaleString()}</td>
+          <td class="px-4 py-3 whitespace-nowrap capitalize">${expense.category}</td>
+          <td class="px-4 py-3">${expense.description}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-right">
+            <button onclick="deleteExpense('${expense.id}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        
+        historyList.appendChild(row);
+      });
+      
+      document.getElementById('no-expenses').style.display = expenses.length ? 'none' : 'block';
+      
+      // Update monthly summary
+      updateMonthlySummary(expenses);
+    }
+
+    // Delete expense
+    function deleteExpense(id) {
+      if (confirm('Are you sure you want to delete this expense?')) {
+        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        expenses = expenses.filter(exp => exp.id !== id);
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+        loadExpenses();
+        showAlert('Expense deleted successfully!', 'success');
+      }
+    }
+
+    // Update monthly summary
+    function updateMonthlySummary(expenses) {
+      // Group by category
+      const categories = {};
+      let totalAmount = 0;
+      
+      expenses.forEach(exp => {
+        if (!categories[exp.category]) {
+          categories[exp.category] = {
+            count: 0,
+            amount: 0
+          };
+        }
+        categories[exp.category].count++;
+        categories[exp.category].amount += exp.amount;
+        totalAmount += exp.amount;
+      });
+      
+      // Update summary table
+      const summaryTable = document.getElementById('monthly-summary-table');
+      summaryTable.innerHTML = '';
+      
+      for (const [category, data] of Object.entries(categories)) {
+        const percentage = ((data.amount / totalAmount) * 100).toFixed(1);
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="px-4 py-3 capitalize">${category}</td>
+          <td class="px-4 py-3">${data.count}</td>
+          <td class="px-4 py-3">₹${data.amount.toLocaleString()}</td>
+          <td class="px-4 py-3">${percentage}%</td>
+        `;
+        summaryTable.appendChild(row);
+      }
+      
+      // Update totals
+      document.getElementById('total-count').textContent = expenses.length;
+      document.getElementById('total-amount').textContent = `₹${totalAmount.toLocaleString()}`;
+      
+      // Update chart
+      updateDailyExpenseChart(categories, totalAmount);
+    }
+
+    // Update daily expense chart
+    function updateDailyExpenseChart(categories, totalAmount) {
+      const ctx = document.getElementById('dailyExpenseChart').getContext('2d');
+      
+      const labels = Object.keys(categories).map(cat => cat.charAt(0).toUpperCase() + cat.slice(1));
+      const data = Object.values(categories).map(cat => cat.amount);
+      const backgroundColors = [
+        '#6366f1', '#4f46e5', '#4338ca', 
+        '#10b981', '#f59e0b', '#ef4444',
+        '#8b5cf6', '#ec4899', '#14b8a6'
+      ];
+      
+      if (dailyChart) dailyChart.destroy();
+      
+      dailyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: backgroundColors,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.raw || 0;
+                  const percentage = ((value / totalAmount) * 100).toFixed(1);
+                  return `₹${value.toLocaleString()} (${percentage}%)`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '₹' + value.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Load month filter options
+    function loadMonthFilter() {
+      const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+      const months = new Set();
+      
+      expenses.forEach(exp => {
+        const month = exp.date.substring(0, 7); // YYYY-MM
+        months.add(month);
+      });
+      
+      const filterSelect = document.getElementById('filter-month');
+      filterSelect.innerHTML = '<option value="">All Months</option>';
+      
+      const sortedMonths = Array.from(months).sort().reverse();
+      sortedMonths.forEach(month => {
+        const date = new Date(month + '-01');
+        const monthName = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        filterSelect.innerHTML += `<option value="${month}">${monthName}</option>`;
+      });
+    }
+
+    // Apply filter
+    document.getElementById('apply-filter').addEventListener('click', () => {
+      const month = document.getElementById('filter-month').value;
+      const category = document.getElementById('filter-category').value;
+      loadExpenses(month, category);
+    });
+
+    // ======================
+    // DASHBOARD LOGIC
+    // ======================
+
+    // Load dashboard data
+    function loadDashboard() {
+      // Load recent monthly plans
+      const monthlyPlans = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('monthly_')) {
+          monthlyPlans.push(JSON.parse(localStorage.getItem(key)));
+        }
+      }
+      monthlyPlans.sort((a, b) => new Date(b.month) - new Date(a.month));
+      
+      const recentPlansList = document.getElementById('recent-plans');
+      recentPlansList.innerHTML = '';
+      
+      monthlyPlans.slice(0, 3).forEach(plan => {
+        const month = new Date(plan.month + '-01').toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short' 
+        });
+        
+        const balanceClass = plan.balance >= 0 ? 'text-green-600' : 'text-red-600';
+        
+        const item = document.createElement('li');
+        item.className = 'flex justify-between items-center';
+        item.innerHTML = `
+          <span>${month}</span>
+          <span class="${balanceClass} font-medium">₹${Math.abs(plan.balance).toLocaleString()}</span>
+        `;
+        recentPlansList.appendChild(item);
+      });
+      
+      if (monthlyPlans.length === 0) {
+        recentPlansList.innerHTML = '<li class="text-gray-500 text-center py-2">No monthly plans yet</li>';
+      }
+      
+      // Load recent expenses
+      const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      const recentExpensesList = document.getElementById('recent-expenses');
+      recentExpensesList.innerHTML = '';
+      
+      expenses.slice(0, 5).forEach(exp => {
+        const date = new Date(exp.date).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        const item = document.createElement('li');
+        item.className = 'flex justify-between items-center';
+        item.innerHTML = `
+          <span class="capitalize">${exp.category}</span>
+          <span class="font-medium">₹${exp.amount.toLocaleString()}</span>
+        `;
+        recentExpensesList.appendChild(item);
+      });
+      
+      if (expenses.length === 0) {
+        recentExpensesList.innerHTML = '<li class="text-gray-500 text-center py-2">No expenses yet</li>';
+      }
+      
+      // Calculate totals
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      const monthlyPlan = monthlyPlans.find(plan => plan.month === currentMonth);
+      const monthlyExpenses = expenses.filter(exp => exp.date.startsWith(currentMonth));
+      
+      const totalBudget = monthlyPlan ? monthlyPlan.allowance : 0;
+      const totalSpent = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+      const remaining = totalBudget - totalSpent;
+      
+      document.getElementById('total-budget').textContent = `₹${totalBudget.toLocaleString()}`;
+      document.getElementById('total-spent').textContent = `₹${totalSpent.toLocaleString()}`;
+      
+      const remainingElement = document.getElementById('remaining-balance');
+      remainingElement.textContent = `₹${Math.abs(remaining).toLocaleString()}`;
+      remainingElement.className = remaining >= 0 ? 'text-green-600' : 'text-red-600';
+    }
+
+    // Helper function to get input values
+    function getValue(id) {
+      return document.getElementById(id).value || 0;
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadDashboard();
+      
+      // Set default date to today
+      document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+      
+      // Set first nav button as active
+      navBtns[0].classList.add('border-indigo-500', 'text-indigo-600', 'dark:text-indigo-400');
+    });
+  </script>
+</body>
+</html>
